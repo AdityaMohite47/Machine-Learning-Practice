@@ -5,7 +5,7 @@ import seaborn as sns
 
 # Columns : 
 
-# age: age of primary beneficiary
+# age: age of primary Beneficiary
 
 # sex: insurance contractor gender, female, male
 
@@ -14,12 +14,11 @@ import seaborn as sns
 
 # children: Number of children covered by health insurance / Number of dependents
 
-# smoker: Smoking
+# smoker: Benificiary Smokes or not. 
 
-# region: the beneficiary's residential area in the US, northeast, southeast, southwest, northwest.
+# region: The Beneficiary's residential area in the US, northeast, southeast, southwest, northwest.
 
 # charges: Individual medical costs billed by health insurance. (Target variable)
-
 
 #-----------------------------------------------------------------------------------------------
 
@@ -68,7 +67,7 @@ scaled_X_test = scaler.transform(X_test)
 
 # Defining the model 
 
-Model = ElasticNet(max_iter=5000)
+Model = ElasticNet(max_iter=100000)
 
 params_grid = {
     'alpha':[x for x in range(1 ,  31)],
@@ -81,7 +80,9 @@ grid_search_model.fit(scaled_X_train , y_train)
 # print(grid_search_model.best_params_)
 # print(grid_search_model.best_score_)
 
+# Tesing 
 y_pred = grid_search_model.predict(scaled_X_test)
-print(mean_absolute_error(y_test , y_pred))
-print(mean_squared_error(y_test , y_pred))
-print(np.sqrt(mean_squared_error(y_test , y_pred)))
+
+print(mean_absolute_error(y_test , y_pred)) # Mean Abosulte Error of 2818.156674142471
+print(mean_squared_error(y_test , y_pred)) # Mean Squared Error of 20108221.332848158
+print(np.sqrt(mean_squared_error(y_test , y_pred))) # Root Mean Squared Error of 4484.219144159678
