@@ -24,7 +24,7 @@ import seaborn as sns
 
 # importing dataset , performing some analytics and corrections
 
-df = pd.read_csv(r'C:\Machine-Learning-Practice\Machine-Learning-Practice\Datasets\insurance.csv')
+df = pd.read_csv('./Datasets/insurance.csv')
 # print(df.head())
 # print(df.info())
 
@@ -66,7 +66,6 @@ scaled_X_train= scaler.fit_transform(X_train)
 scaled_X_test = scaler.transform(X_test)
 
 # Defining the model 
-
 Model = ElasticNet(max_iter=100000)
 
 params_grid = {
