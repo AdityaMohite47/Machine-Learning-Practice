@@ -95,29 +95,29 @@ y = data['TenYearCHD']
 # plt.show()
 
 from sklearn.model_selection import GridSearchCV , train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.multiclass import OneVsRestClassifier
-from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler , MinMaxScaler
+# from sklearn.multiclass import OneVsRestClassifier
+# from sklearn.linear_model import LogisticRegression
 
 # Suppressing Warnings
-import warnings
-warnings.filterwarnings("ignore", message="l1_ratio parameter is only used when penalty is 'elasticnet'")
+# import warnings
+# warnings.filterwarnings("ignore", message="l1_ratio parameter is only used when penalty is 'elasticnet'")
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
 
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
+# scaler = StandardScaler()
+# X_train = scaler.fit_transform(X_train)
+# X_test = scaler.transform(X_test)
 
-Base_Model = OneVsRestClassifier(estimator=LogisticRegression(solver='saga' , max_iter=5000))
+# Base_Model = OneVsRestClassifier(estimator=LogisticRegression(solver='saga' , max_iter=5000))
 
-params_grid = {
-    'estimator__penalty' : ['l1' , 'l2' , 'elasticnet'],
-    'estimator__C': [0.1 , 0.2 , 0.3 , 0.4 , 0.5 , 0.6 , 0.7 , 0.8 , 0.9], 
-    'estimator__l1_ratio': [0.1 , 0.2 , 0.3 , 0.4 , 0.5 , 0.6 , 0.7 , 0.8 , 0.9]
-}
+# params_grid = {
+#     'estimator__penalty' : ['l1' , 'l2' , 'elasticnet'],
+#     'estimator__C': [0.1 , 0.2 , 0.3 , 0.4 , 0.5 , 0.6 , 0.7 , 0.8 , 0.9], 
+#     'estimator__l1_ratio': [0.1 , 0.2 , 0.3 , 0.4 , 0.5 , 0.6 , 0.7 , 0.8 , 0.9]
+# }
 
-Grid_Search_Model = GridSearchCV(estimator=Base_Model , param_grid=params_grid , cv=10)
+# Grid_Search_Model = GridSearchCV(estimator=Base_Model , param_grid=params_grid , cv=10)
 # Grid_Search_Model.fit(X_train , y_train)
 
 # print(Grid_Search_Model.best_params_) #{'estimator__C': 0.1, 'estimator__l1_ratio': np.float64(0.0), 'estimator__penalty': 'l1'}
@@ -126,7 +126,7 @@ Grid_Search_Model = GridSearchCV(estimator=Base_Model , param_grid=params_grid ,
 # ----------------------------------------------------------------------------------------------------------------------------
 
 # Testing
-from sklearn.metrics import accuracy_score , precision_score , recall_score , confusion_matrix , f1_score
+from sklearn.metrics import accuracy_score , precision_score , recall_score , confusion_matrix , f1_score , classification_report
 
 # y_pred = Grid_Search_Model.predict(X_test)
 
@@ -141,22 +141,24 @@ from sklearn.metrics import accuracy_score , precision_score , recall_score , co
 
 # Found an Imbalance in classes thus procceding to resampling and testing again 
 
-from imblearn.combine import SMOTETomek # Oversampling the majority class
+# from imblearn.combine import SMOTETomek # Oversampling the majority class
 
-re_sampler = SMOTETomek(random_state=42)
-X_train , y_train = re_sampler.fit_resample(X_train , y_train)
-Grid_Search_Model.fit(X_train , y_train)
-print(Grid_Search_Model.best_params_)
+# re_sampler = SMOTETomek(random_state=42)
+# X_train , y_train = re_sampler.fit_resample(X_train , y_train)
+# Grid_Search_Model.fit(X_train , y_train)
+# print(Grid_Search_Model.best_params_)
 
-y_pred = Grid_Search_Model.predict(X_test)
+# y_pred = Grid_Search_Model.predict(X_test)
 
-print("Accuracy Score : " , accuracy_score(y_test , y_pred))
-print("Precision Score : " , precision_score(y_test , y_pred))
-print("Recall Score : " , recall_score(y_test , y_pred))
-print("f1 Score : " , f1_score(y_test , y_pred))
-print("Confusion Matix : \n" , confusion_matrix(y_test , y_pred))
+# print("Accuracy Score : " , accuracy_score(y_test , y_pred))
+# print("Precision Score : " , precision_score(y_test , y_pred))
+# print("Recall Score : " , recall_score(y_test , y_pred))
+# print("f1 Score : " , f1_score(y_test , y_pred))
+# print("Confusion Matix : \n" , confusion_matrix(y_test , y_pred))
 
-# Logistic Regression didn't fit the problem statement well , looking for further improvements...
+# Logistic Regression model didn't fit the problem statement well , looking for further improvements...
+
+# Current Scores :  
 # {'estimator__C': 0.5, 'estimator__l1_ratio': 0.6, 'estimator__penalty': 'elasticnet'}
 # Accuracy Score :  0.659433962264151
 # Precision Score :  0.2669902912621359
@@ -165,3 +167,27 @@ print("Confusion Matix : \n" , confusion_matrix(y_test , y_pred))
 # Confusion Matix :
 #  [[589 302]
 #  [ 59 110]]
+
+# ----------------------------------------------------------------------------------------------------------------------------
+
+# Solving the same with KNN
+
+from imblearn.pipeline import Pipeline
+from sklearn.neighbors import KNeighborsClassifier
+from imblearn.combine import SMOTETomek
+
+pipe = Pipeline(steps=[ ('scaler' , MinMaxScaler() ) , ('smote' , SMOTETomek())  , ('model' , KNeighborsClassifier(weights='distance'))])
+
+params_grid = {
+    'model__n_neighbors':[x for x in range(1 , 31)],
+    'model__metric':['euclidean' , 'manhattan' , 'minkowski']
+}
+
+GridSearchModel_KNN = GridSearchCV(estimator=pipe , param_grid=params_grid , cv=10)
+GridSearchModel_KNN.fit(X_train , y_train)
+
+print(GridSearchModel_KNN.best_params_)
+
+y_pred = GridSearchModel_KNN.predict(X_test)
+print(classification_report(y_test , y_pred))
+print(confusion_matrix(y_test , y_pred))
