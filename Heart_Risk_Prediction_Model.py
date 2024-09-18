@@ -191,3 +191,7 @@ print(GridSearchModel_KNN.best_params_)
 y_pred = GridSearchModel_KNN.predict(X_test)
 print(classification_report(y_test , y_pred))
 print(confusion_matrix(y_test , y_pred))
+
+# KNN Classifier performs decent but not because of high frequency of datapoints in class "0" is far greater than class "1" creating imbalance.
+
+# To be continued to develop a model that would solve the problem
