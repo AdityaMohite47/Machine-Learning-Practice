@@ -94,104 +94,64 @@ y = data['TenYearCHD']
 # y.value_counts().plot.pie() # pandas in-built function to visualize a pie-chart
 # plt.show()
 
-from sklearn.model_selection import GridSearchCV , train_test_split
-from sklearn.preprocessing import StandardScaler , MinMaxScaler
-# from sklearn.multiclass import OneVsRestClassifier
-# from sklearn.linear_model import LogisticRegression
-
-# Suppressing Warnings
-# import warnings
-# warnings.filterwarnings("ignore", message="l1_ratio parameter is only used when penalty is 'elasticnet'")
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5, random_state=42)
-
-# scaler = StandardScaler()
-# X_train = scaler.fit_transform(X_train)
-# X_test = scaler.transform(X_test)
-
-# Base_Model = OneVsRestClassifier(estimator=LogisticRegression(solver='saga' , max_iter=5000))
-
-# params_grid = {
-#     'estimator__penalty' : ['l1' , 'l2' , 'elasticnet'],
-#     'estimator__C': [0.1 , 0.2 , 0.3 , 0.4 , 0.5 , 0.6 , 0.7 , 0.8 , 0.9], 
-#     'estimator__l1_ratio': [0.1 , 0.2 , 0.3 , 0.4 , 0.5 , 0.6 , 0.7 , 0.8 , 0.9]
-# }
-
-# Grid_Search_Model = GridSearchCV(estimator=Base_Model , param_grid=params_grid , cv=10)
-# Grid_Search_Model.fit(X_train , y_train)
-
-# print(Grid_Search_Model.best_params_) #{'estimator__C': 0.1, 'estimator__l1_ratio': np.float64(0.0), 'estimator__penalty': 'l1'}
-
-
-# ----------------------------------------------------------------------------------------------------------------------------
-
-# Testing
-from sklearn.metrics import accuracy_score , precision_score , recall_score , confusion_matrix , f1_score , classification_report
-
-# y_pred = Grid_Search_Model.predict(X_test)
-
-# print("Accuracy Score : " , accuracy_score(y_test , y_pred))
-# print("Precision Score : " , precision_score(y_test , y_pred))
-# print("Recall Score : " , recall_score(y_test , y_pred))
-# print("f1 Score : " , f1_score(y_test , y_pred))
-# print("Confusion Matix : \n" , confusion_matrix(y_test , y_pred))
-
-
-#---------------------------------------------------------------------------------------------------------------------------------------------------
-
 # Found an Imbalance in classes thus procceding to resampling and testing again 
 
-# from imblearn.combine import SMOTETomek # Oversampling the majority class
+from imblearn.combine import SMOTETomek # UnderSampling the majority class
 
-# re_sampler = SMOTETomek(random_state=42)
-# X_train , y_train = re_sampler.fit_resample(X_train , y_train)
-# Grid_Search_Model.fit(X_train , y_train)
-# print(Grid_Search_Model.best_params_)
+re_sampler = SMOTETomek(random_state=21 , sampling_strategy='minority')
+re_X , re_y = re_sampler.fit_resample(X=X , y=y)
 
-# y_pred = Grid_Search_Model.predict(X_test)
+from sklearn.model_selection import GridSearchCV , train_test_split
+from sklearn.preprocessing import StandardScaler 
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.linear_model import LogisticRegression
 
-# print("Accuracy Score : " , accuracy_score(y_test , y_pred))
-# print("Precision Score : " , precision_score(y_test , y_pred))
-# print("Recall Score : " , recall_score(y_test , y_pred))
-# print("f1 Score : " , f1_score(y_test , y_pred))
-# print("Confusion Matix : \n" , confusion_matrix(y_test , y_pred))
+# Suppressing Warnings
+import warnings
+warnings.filterwarnings("ignore", message="l1_ratio parameter is only used when penalty is 'elasticnet'")
 
-# Logistic Regression model didn't fit the problem statement well , looking for further improvements...
+X_train, X_test, y_train, y_test = train_test_split(re_X, re_y, test_size=0.4, random_state=21) 
 
-# Current Scores :  
-# {'estimator__C': 0.5, 'estimator__l1_ratio': 0.6, 'estimator__penalty': 'elasticnet'}
-# Accuracy Score :  0.659433962264151
-# Precision Score :  0.2669902912621359
-# Recall Score :  0.650887573964497
-# f1 Score :  0.37865748709122204
-# Confusion Matix :
-#  [[589 302]
-#  [ 59 110]]
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
 
-# ----------------------------------------------------------------------------------------------------------------------------
-
-# Solving the same with KNN
-
-from imblearn.pipeline import Pipeline
-from sklearn.neighbors import KNeighborsClassifier
-from imblearn.combine import SMOTETomek
-
-pipe = Pipeline(steps=[ ('scaler' , MinMaxScaler() ) , ('smote' , SMOTETomek())  , ('model' , KNeighborsClassifier(weights='distance'))])
+Base_Model = OneVsRestClassifier(estimator=LogisticRegression(solver='saga' , max_iter=5000))
 
 params_grid = {
-    'model__n_neighbors':[x for x in range(1 , 31)],
-    'model__metric':['euclidean' , 'manhattan' , 'minkowski']
+    'estimator__penalty' : ['l1' , 'l2' , 'elasticnet'],
+    'estimator__C': [0.1 , 0.2 , 0.3 , 0.4 , 0.5 , 0.6 , 0.7 , 0.8 , 0.9], 
+    'estimator__l1_ratio': [0.1 , 0.2 , 0.3 , 0.4 , 0.5 , 0.6 , 0.7 , 0.8 , 0.9]
 }
 
-GridSearchModel_KNN = GridSearchCV(estimator=pipe , param_grid=params_grid , cv=10)
-GridSearchModel_KNN.fit(X_train , y_train)
+Grid_Search_Model = GridSearchCV(estimator=Base_Model , param_grid=params_grid , cv=10)
+Grid_Search_Model.fit(X_train , y_train)
 
-print(GridSearchModel_KNN.best_params_)
+print(Grid_Search_Model.best_params_) #{'estimator__C': 0.1, 'estimator__l1_ratio': 0.1, 'estimator__penalty': 'l1'}
 
-y_pred = GridSearchModel_KNN.predict(X_test)
-print(classification_report(y_test , y_pred))
-print(confusion_matrix(y_test , y_pred))
 
-# KNN Classifier performs decent but not because of high frequency of datapoints in class "0" is far greater than class "1" creating imbalance.
+# -------------------------------------------------------------------------------------------------------------------------------------
 
-# To be continued to develop a model that would solve the problem
+
+# Testing
+from sklearn.metrics import confusion_matrix  ,classification_report
+
+y_pred = Grid_Search_Model.predict(X_test)
+
+print("Confusion Matix : \n" , confusion_matrix(y_test , y_pred))
+# [[966 520]
+#  [410 956]]
+
+print("Classification Report : \n" , classification_report(y_test , y_pred))
+#                precision    recall  f1-score   support
+
+#            0       0.70      0.65      0.68      1486
+#            1       0.65      0.70      0.67      1366
+
+#     accuracy                           0.67      2852
+#    macro avg       0.67      0.67      0.67      2852
+# weighted avg       0.68      0.67      0.67      2852
+
+
+# Above are the best scores I stretched with resampling the data.
+
